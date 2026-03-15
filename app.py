@@ -13,7 +13,7 @@ from datetime import datetime, timedelta
 from urllib.parse import urlencode
 from flask import (
     Flask, render_template, redirect, url_for, request,
-    session, flash, jsonify, abort
+    session, flash, jsonify, abort, send_from_directory
 )
 from werkzeug.utils import secure_filename
 
@@ -125,6 +125,9 @@ def terms():
 def about():
     return render_template("about.html")
 
+@app.route("/tiktoktnYOLBZ7ZoFhy3pJKoYCwGrpulwkRgcx.txt")
+def tiktok_verification():
+    return send_from_directory("static", "tiktoktnYOLBZ7ZoFhy3pJKoYCwGrpulwkRgcx.txt")
 
 # ---------------------------------------------------------------------------
 # TikTok OAuth flow
