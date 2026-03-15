@@ -67,12 +67,12 @@ def tiktok_headers(access_token: str) -> dict:
 
 def refresh_access_token(refresh_token: str) -> dict | None:
     """Exchange a refresh token for a new access token."""
-    resp = requests.post(TIKTOK_TOKEN_URL, json={
+    resp = requests.post(TIKTOK_TOKEN_URL, data={
         "client_key": TIKTOK_CLIENT_KEY,
         "client_secret": TIKTOK_CLIENT_SECRET,
         "grant_type": "refresh_token",
         "refresh_token": refresh_token,
-    })
+    }, headers={"Content-Type": "application/x-www-form-urlencoded"})
     data = resp.json()
     if "access_token" in data:
         return data
@@ -170,13 +170,13 @@ def auth_tiktok_callback():
         return redirect(url_for("index"))
 
     # Exchange code for access token
-    token_resp = requests.post(TIKTOK_TOKEN_URL, json={
+    token_resp = requests.post(TIKTOK_TOKEN_URL, data={
         "client_key": TIKTOK_CLIENT_KEY,
         "client_secret": TIKTOK_CLIENT_SECRET,
         "code": code,
         "grant_type": "authorization_code",
         "redirect_uri": TIKTOK_REDIRECT_URI,
-    })
+    }, headers={"Content-Type": "application/x-www-form-urlencoded"})
     token_data = token_resp.json()
 
     if "access_token" not in token_data:
