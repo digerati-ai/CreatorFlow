@@ -367,6 +367,7 @@ img { max-width: 100%; }
     color: var(--text);
     transition: border-color var(--transition);
 }
+textarea.form-input { resize: vertical; min-height: 72px; }
 .form-input:focus, .form-select:focus { outline: none; border-color: var(--accent); }
 .form-hint { font-size: 13px; color: var(--text-light); margin-top: 4px; }
 .form-error { font-size: 13px; color: var(--error); margin-top: 8px; font-weight: 500; }

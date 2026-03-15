@@ -60,8 +60,14 @@
                     <div class="form-group">
                         <label for="title">Title</label>
                         <input type="text" id="title" name="title" placeholder="Enter a title for your video"
-                               maxlength="2200" class="form-input">
-                        <p class="form-hint">Describe your video. You can include #hashtags and @mentions.</p>
+                               maxlength="150" class="form-input">
+                    </div>
+
+                    {# Description #}
+                    <div class="form-group">
+                        <label for="description">Description</label>
+                        <textarea id="description" name="description" placeholder="Describe your video. You can include #hashtags and @mentions."
+                               maxlength="2200" rows="3" class="form-input"></textarea>
                     </div>
 
                     {# Post Mode #}
@@ -72,6 +78,9 @@
                             <option value="DIRECT_POST">Direct Post (publish immediately)</option>
                         </select>
                         <p class="form-hint">Draft uploads let you review and edit in TikTok before publishing.</p>
+                        <div id="draftModeNotice" class="disclosure-notice" style="margin-top:8px;">
+                            In Draft mode, privacy, interaction, and disclosure settings are configured in the TikTok app when you finalize your post.
+                        </div>
                     </div>
 
                     {# Privacy Level — NO default value per TikTok UX requirement #}
@@ -260,8 +269,17 @@
     const brandedContentLabel = document.getElementById('brandedContentLabel');
     const commercialRequired = document.getElementById('commercialRequired');
 
-    [privacySelect, consentCheck, commercialToggle, yourBrand, brandedContent].forEach(el => {
+    const postModeSelect = document.getElementById('post_mode');
+    const draftModeNotice = document.getElementById('draftModeNotice');
+
+    [privacySelect, consentCheck, commercialToggle, yourBrand, brandedContent, postModeSelect].forEach(el => {
         el.addEventListener('change', validateForm);
+    });
+
+    // Show/hide draft mode notice and toggle settings visibility
+    postModeSelect.addEventListener('change', function() {
+        const isDraft = this.value === 'UPLOAD_TO_INBOX';
+        draftModeNotice.style.display = isDraft ? 'block' : 'none';
     });
 
     // Commercial content toggle

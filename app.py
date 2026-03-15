@@ -305,41 +305,50 @@ def api_upload():
     file_size = os.path.getsize(filepath)
 
     try:
-        # Build post info
-        post_info = {
-            "title": title,
-            "privacy_level": privacy_level,
-            "disable_comment": not allow_comment,
-            "disable_duet": not allow_duet,
-            "disable_stitch": not allow_stitch,
+        description = request.form.get("description", "").strip()
+
+        # Source info is common to both modes
+        source_info = {
+            "source": "FILE_UPLOAD",
+            "video_size": file_size,
+            "chunk_size": file_size,
+            "total_chunk_count": 1,
         }
 
-        # Add commercial content fields if applicable
-        if commercial_content:
-            if your_brand and branded_content:
-                post_info["brand_content_toggle"] = True
-                post_info["brand_organic_toggle"] = True
-            elif branded_content:
-                post_info["brand_content_toggle"] = True
-            elif your_brand:
-                post_info["brand_organic_toggle"] = True
-
-        # Determine endpoint based on post mode
         if post_mode == "DIRECT_POST":
+            # Direct Post: include post_info with all metadata
             endpoint = TIKTOK_PUBLISH_VIDEO_URL
-        else:
-            endpoint = TIKTOK_UPLOAD_INBOX_URL
+            post_info = {
+                "title": title,
+                "description": description,
+                "privacy_level": privacy_level,
+                "disable_comment": not allow_comment,
+                "disable_duet": not allow_duet,
+                "disable_stitch": not allow_stitch,
+            }
 
-        # Initiate upload (FILE_UPLOAD mode)
-        init_body = {
-            "post_info": post_info,
-            "source_info": {
-                "source": "FILE_UPLOAD",
-                "video_size": file_size,
-                "chunk_size": file_size,
-                "total_chunk_count": 1,
-            },
-        }
+            # Add commercial content fields if applicable
+            if commercial_content:
+                if your_brand and branded_content:
+                    post_info["brand_content_toggle"] = True
+                    post_info["brand_organic_toggle"] = True
+                elif branded_content:
+                    post_info["brand_content_toggle"] = True
+                elif your_brand:
+                    post_info["brand_organic_toggle"] = True
+
+            init_body = {
+                "post_info": post_info,
+                "source_info": source_info,
+            }
+        else:
+            # Upload to Inbox: only source_info, creator sets metadata in TikTok app
+            endpoint = TIKTOK_UPLOAD_INBOX_URL
+            init_body = {
+                "source_info": source_info,
+            }
+
+        logger.info("Upload init request to %s: %s", endpoint, json.dumps(init_body))
 
         init_resp = requests.post(
             endpoint,
@@ -347,6 +356,7 @@ def api_upload():
             json=init_body,
         )
         init_data = init_resp.json()
+        logger.info("Upload init response: %s", json.dumps(init_data))
 
         if init_data.get("error", {}).get("code") != "ok":
             error_msg = init_data.get("error", {}).get("message", "Upload initiation failed.")
