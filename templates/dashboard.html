@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<section class="dashboard-page">
+    <div class="dashboard-inner">
+        <h1>Dashboard</h1>
+
+        <div class="account-card">
+            <div class="account-header">
+                <h2>Connected Account</h2>
+            </div>
+            <div class="account-body">
+                <div class="account-info">
+                    {% if account.avatar_url %}
+                    <img src="{{ account.avatar_url }}" alt="{{ account.display_name }}" class="account-avatar">
+                    {% else %}
+                    <div class="account-avatar-placeholder">
+                        {{ account.display_name[0] if account.display_name else '?' }}
+                    </div>
+                    {% endif %}
+                    <div class="account-details">
+                        <h3>{{ account.display_name }}</h3>
+                        <p class="account-status">
+                            <span class="status-dot"></span>
+                            Connected via TikTok
+                        </p>
+                    </div>
+                </div>
+                <div class="account-actions">
+                    <a href="{{ url_for('publish') }}" class="btn btn-primary">Publish Content →</a>
+                    <a href="{{ url_for('auth_disconnect') }}" class="btn btn-outline btn-danger">Disconnect Account</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="dashboard-grid">
+            <div class="dash-card">
+                <h3>Publish Video</h3>
+                <p>Upload and publish a video to your TikTok account with full control over privacy and settings.</p>
+                <a href="{{ url_for('publish') }}" class="btn btn-primary btn-sm">Go to Publish →</a>
+            </div>
+            <div class="dash-card">
+                <h3>How It Works</h3>
+                <p>Upload your video, set your title and privacy preferences, preview your content, and publish to TikTok or save to drafts.</p>
+            </div>
+            <div class="dash-card">
+                <h3>Need Help?</h3>
+                <p>Questions about publishing or your account? Contact us at <a href="mailto:support@creatorflow.app">support@creatorflow.app</a>.</p>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

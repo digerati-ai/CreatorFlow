@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}CreatorFlow — Publish to TikTok{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <div class="hero-inner">
+        <div class="hero-badge">Content Publishing Platform</div>
+        <h1>Publish your content<br>to TikTok, seamlessly.</h1>
+        <p class="hero-sub">
+            CreatorFlow helps creators plan, preview, and publish original video content
+            to TikTok with full control over privacy, interactions, and compliance.
+        </p>
+        {% if account %}
+            <a href="{{ url_for('dashboard') }}" class="btn btn-primary btn-lg">Go to Dashboard →</a>
+        {% else %}
+            <a href="{{ url_for('auth_tiktok') }}" class="btn btn-primary btn-lg">Connect Your TikTok Account</a>
+        {% endif %}
+    </div>
+</section>
+
+<section class="features" id="features">
+    <div class="features-inner">
+        <h2>Everything you need to publish</h2>
+        <p class="section-sub">Simple, compliant, and designed for creators who value control.</p>
+
+        <div class="feature-grid">
+            <div class="feature-card">
+                <div class="feature-icon">🔐</div>
+                <h3>Secure OAuth Login</h3>
+                <p>Connect your TikTok account securely through TikTok's official authorization flow. Your credentials never touch our servers.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🎬</div>
+                <h3>Preview Before You Post</h3>
+                <p>See exactly what you're publishing before it goes live. Review your video, title, privacy settings, and interaction preferences.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🎛️</div>
+                <h3>Full Privacy Control</h3>
+                <p>Choose who can see your content — public, friends, or private. Control comments, duets, and stitches on every post.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📋</div>
+                <h3>Commercial Disclosure</h3>
+                <p>Built-in branded content and promotional disclosures ensure your posts comply with TikTok's commercial content policies.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📤</div>
+                <h3>Direct Post or Draft</h3>
+                <p>Publish directly to your TikTok profile or upload to your drafts for final review in the TikTok app before posting.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📊</div>
+                <h3>Post Status Tracking</h3>
+                <p>Monitor your upload progress and processing status in real time. Know exactly when your content goes live.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="cta">
+    <div class="cta-inner">
+        <h2>Ready to streamline your TikTok publishing?</h2>
+        <p>Connect your account and start publishing in minutes.</p>
+        {% if account %}
+            <a href="{{ url_for('publish') }}" class="btn btn-primary btn-lg">Publish Now →</a>
+        {% else %}
+            <a href="{{ url_for('auth_tiktok') }}" class="btn btn-primary btn-lg">Get Started — Free</a>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

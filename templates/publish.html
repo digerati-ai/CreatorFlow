@@ -1,0 +1,442 @@
+{% extends "base.html" %}
+{% block title %}Publish to TikTok{% endblock %}
+
+{% block content %}
+<section class="publish-page">
+    <div class="publish-inner">
+        <h1>Publish to TikTok</h1>
+
+        {# --- Creator Info Banner (Required: show who is posting) --- #}
+        <div class="creator-banner">
+            <div class="creator-info">
+                {% if account.avatar_url %}
+                <img src="{{ account.avatar_url }}" alt="{{ account.display_name }}" class="creator-avatar">
+                {% else %}
+                <div class="creator-avatar-placeholder">{{ account.display_name[0] }}</div>
+                {% endif %}
+                <div>
+                    <p class="creator-label">Publishing to</p>
+                    <h3 class="creator-name">{{ creator_info.get('creator_nickname', account.display_name) }}</h3>
+                    {% if creator_info.get('creator_username') %}
+                    <p class="creator-username">@{{ creator_info.creator_username }}</p>
+                    {% endif %}
+                </div>
+            </div>
+            {% if creator_info.get('max_video_post_duration_sec') %}
+            <div class="creator-limits">
+                <span class="limit-badge">Max duration: {{ creator_info.max_video_post_duration_sec }}s</span>
+            </div>
+            {% endif %}
+        </div>
+
+        {# --- Check if creator can post --- #}
+        {% if creator_info.get('can_post') == false %}
+        <div class="alert alert-warning">
+            <strong>Posting limit reached.</strong> This account has reached its posting limit. Please try again later.
+        </div>
+        {% else %}
+
+        <div class="publish-layout">
+            {# --- Left: Upload & Preview --- #}
+            <div class="publish-preview">
+                <h2>Video</h2>
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-placeholder" id="uploadPlaceholder">
+                        <div class="upload-icon">📹</div>
+                        <p>Drag & drop your video here<br>or click to browse</p>
+                        <p class="upload-formats">MP4, WebM, or MOV &middot; Max 128 MB</p>
+                    </div>
+                    <video id="videoPreview" class="video-preview" controls style="display:none;"></video>
+                    <input type="file" id="videoInput" accept="video/mp4,video/webm,video/quicktime" style="display:none;">
+                </div>
+                <p class="upload-filename" id="uploadFilename"></p>
+            </div>
+
+            {# --- Right: Post Settings --- #}
+            <div class="publish-settings">
+                <form id="publishForm" enctype="multipart/form-data">
+
+                    {# Title #}
+                    <div class="form-group">
+                        <label for="title">Title</label>
+                        <input type="text" id="title" name="title" placeholder="Enter a title for your video"
+                               maxlength="2200" class="form-input">
+                        <p class="form-hint">Describe your video. You can include #hashtags and @mentions.</p>
+                    </div>
+
+                    {# Post Mode #}
+                    <div class="form-group">
+                        <label for="post_mode">Post Mode</label>
+                        <select id="post_mode" name="post_mode" class="form-select">
+                            <option value="UPLOAD_TO_INBOX">Upload to Drafts (review in TikTok before posting)</option>
+                            <option value="DIRECT_POST">Direct Post (publish immediately)</option>
+                        </select>
+                        <p class="form-hint">Draft uploads let you review and edit in TikTok before publishing.</p>
+                    </div>
+
+                    {# Privacy Level — NO default value per TikTok UX requirement #}
+                    <div class="form-group">
+                        <label for="privacy_level">Who can view this video <span class="required">*</span></label>
+                        <select id="privacy_level" name="privacy_level" class="form-select" required>
+                            <option value="" disabled selected>Select privacy level</option>
+                            {% if creator_info.get('privacy_level_options') %}
+                                {% for option in creator_info.privacy_level_options %}
+                                <option value="{{ option }}">
+                                    {% if option == 'PUBLIC_TO_EVERYONE' %}Public — Everyone
+                                    {% elif option == 'MUTUAL_FOLLOW_FRIENDS' %}Friends — Mutual followers
+                                    {% elif option == 'FOLLOWER_OF_CREATOR' %}Followers
+                                    {% elif option == 'SELF_ONLY' %}Private — Only me
+                                    {% else %}{{ option }}{% endif %}
+                                </option>
+                                {% endfor %}
+                            {% else %}
+                                <option value="PUBLIC_TO_EVERYONE">Public — Everyone</option>
+                                <option value="MUTUAL_FOLLOW_FRIENDS">Friends — Mutual followers</option>
+                                <option value="SELF_ONLY">Private — Only me</option>
+                            {% endif %}
+                        </select>
+                    </div>
+
+                    {# Interaction Settings — all UNCHECKED by default per TikTok UX requirement #}
+                    <div class="form-group">
+                        <label>Interaction Settings</label>
+                        <div class="checkbox-group">
+                            <label class="checkbox-label {% if creator_info.get('comment_disabled') %}disabled{% endif %}">
+                                <input type="checkbox" name="allow_comment" id="allow_comment"
+                                       {% if creator_info.get('comment_disabled') %}disabled{% endif %}>
+                                <span class="checkbox-text">Allow Comments</span>
+                                {% if creator_info.get('comment_disabled') %}
+                                <span class="checkbox-disabled-note">Disabled in account settings</span>
+                                {% endif %}
+                            </label>
+                            <label class="checkbox-label {% if creator_info.get('duet_disabled') %}disabled{% endif %}">
+                                <input type="checkbox" name="allow_duet" id="allow_duet"
+                                       {% if creator_info.get('duet_disabled') %}disabled{% endif %}>
+                                <span class="checkbox-text">Allow Duet</span>
+                                {% if creator_info.get('duet_disabled') %}
+                                <span class="checkbox-disabled-note">Disabled in account settings</span>
+                                {% endif %}
+                            </label>
+                            <label class="checkbox-label {% if creator_info.get('stitch_disabled') %}disabled{% endif %}">
+                                <input type="checkbox" name="allow_stitch" id="allow_stitch"
+                                       {% if creator_info.get('stitch_disabled') %}disabled{% endif %}>
+                                <span class="checkbox-text">Allow Stitch</span>
+                                {% if creator_info.get('stitch_disabled') %}
+                                <span class="checkbox-disabled-note">Disabled in account settings</span>
+                                {% endif %}
+                            </label>
+                        </div>
+                    </div>
+
+                    {# --- Commercial Content Disclosure (Required by TikTok) --- #}
+                    <div class="form-group">
+                        <label>Content Disclosure</label>
+                        <label class="toggle-label">
+                            <input type="checkbox" id="commercial_content" name="commercial_content" class="toggle-input">
+                            <span class="toggle-switch"></span>
+                            <span class="toggle-text">This content promotes a brand, product, or service</span>
+                        </label>
+
+                        <div id="commercialOptions" class="commercial-options" style="display:none;">
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="your_brand" id="your_brand">
+                                <span class="checkbox-text">Your Brand</span>
+                                <span class="checkbox-hint">You are promoting yourself or your own business</span>
+                            </label>
+                            <div id="yourBrandNotice" class="disclosure-notice" style="display:none;">
+                                Your video will be labeled as "Promotional content"
+                            </div>
+
+                            <label class="checkbox-label" id="brandedContentLabel">
+                                <input type="checkbox" name="branded_content" id="branded_content">
+                                <span class="checkbox-text">Branded Content</span>
+                                <span class="checkbox-hint">You are promoting another brand or a third party</span>
+                            </label>
+                            <div id="brandedContentNotice" class="disclosure-notice" style="display:none;">
+                                Your video will be labeled as "Paid partnership"
+                            </div>
+
+                            <div id="bothSelectedNotice" class="disclosure-notice" style="display:none;">
+                                Your video will be labeled as "Paid partnership"
+                            </div>
+
+                            <div id="commercialRequired" class="form-error" style="display:none;">
+                                You need to indicate if your content promotes yourself, a third party, or both.
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr class="form-divider">
+
+                    {# --- Consent Declaration (Required by TikTok) --- #}
+                    <div class="form-group consent-group">
+                        <label class="checkbox-label consent-label">
+                            <input type="checkbox" name="consent" id="consent" required>
+                            <span class="checkbox-text" id="consentText">
+                                By posting, you agree to TikTok's
+                                <a href="https://www.tiktok.com/legal/page/global/music-usage-confirmation/en"
+                                   target="_blank" rel="noopener">Music Usage Confirmation</a>
+                            </span>
+                        </label>
+                    </div>
+
+                    {# --- Submit --- #}
+                    <button type="submit" id="publishBtn" class="btn btn-primary btn-lg btn-full" disabled>
+                        Publish to TikTok
+                    </button>
+
+                    <p class="publish-note">
+                        After publishing, it may take a few minutes for your content to process and be visible on your profile.
+                    </p>
+                </form>
+
+                {# --- Status Tracking --- #}
+                <div id="statusArea" class="status-area" style="display:none;">
+                    <h3>Upload Status</h3>
+                    <div class="status-bar">
+                        <div class="status-indicator" id="statusIndicator"></div>
+                        <span id="statusText">Uploading...</span>
+                    </div>
+                    <p id="statusDetail" class="status-detail"></p>
+                </div>
+            </div>
+        </div>
+
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function() {
+    // --- Video Upload & Preview ---
+    const uploadArea = document.getElementById('uploadArea');
+    const uploadPlaceholder = document.getElementById('uploadPlaceholder');
+    const videoInput = document.getElementById('videoInput');
+    const videoPreview = document.getElementById('videoPreview');
+    const uploadFilename = document.getElementById('uploadFilename');
+    const publishBtn = document.getElementById('publishBtn');
+    const publishForm = document.getElementById('publishForm');
+    const maxDuration = {{ creator_info.get('max_video_post_duration_sec', 300) }};
+
+    let selectedFile = null;
+
+    uploadArea.addEventListener('click', () => videoInput.click());
+    uploadArea.addEventListener('dragover', (e) => { e.preventDefault(); uploadArea.classList.add('drag-over'); });
+    uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('drag-over'));
+    uploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadArea.classList.remove('drag-over');
+        if (e.dataTransfer.files.length) handleFileSelect(e.dataTransfer.files[0]);
+    });
+    videoInput.addEventListener('change', () => { if (videoInput.files.length) handleFileSelect(videoInput.files[0]); });
+
+    function handleFileSelect(file) {
+        const ext = file.name.split('.').pop().toLowerCase();
+        if (!['mp4', 'webm', 'mov'].includes(ext)) {
+            alert('Please select a valid video file (MP4, WebM, or MOV).');
+            return;
+        }
+        if (file.size > 128 * 1024 * 1024) {
+            alert('File exceeds the 128 MB sandbox limit.');
+            return;
+        }
+        selectedFile = file;
+        uploadPlaceholder.style.display = 'none';
+        videoPreview.style.display = 'block';
+        videoPreview.src = URL.createObjectURL(file);
+        uploadFilename.textContent = file.name + ' (' + (file.size / (1024*1024)).toFixed(1) + ' MB)';
+        validateForm();
+    }
+
+    // --- Form Validation ---
+    const privacySelect = document.getElementById('privacy_level');
+    const consentCheck = document.getElementById('consent');
+    const commercialToggle = document.getElementById('commercial_content');
+    const commercialOptions = document.getElementById('commercialOptions');
+    const yourBrand = document.getElementById('your_brand');
+    const brandedContent = document.getElementById('branded_content');
+    const brandedContentLabel = document.getElementById('brandedContentLabel');
+    const commercialRequired = document.getElementById('commercialRequired');
+
+    [privacySelect, consentCheck, commercialToggle, yourBrand, brandedContent].forEach(el => {
+        el.addEventListener('change', validateForm);
+    });
+
+    // Commercial content toggle
+    commercialToggle.addEventListener('change', function() {
+        commercialOptions.style.display = this.checked ? 'block' : 'none';
+        if (!this.checked) {
+            yourBrand.checked = false;
+            brandedContent.checked = false;
+        }
+        updateDisclosureNotices();
+        updateConsentText();
+        validateForm();
+    });
+
+    yourBrand.addEventListener('change', () => { updateDisclosureNotices(); updateConsentText(); validateForm(); });
+    brandedContent.addEventListener('change', () => {
+        // Branded content cannot be private
+        if (brandedContent.checked && privacySelect.value === 'SELF_ONLY') {
+            alert('Branded content visibility cannot be set to private. Changing to Public.');
+            privacySelect.value = 'PUBLIC_TO_EVERYONE';
+        }
+        updateDisclosureNotices();
+        updateConsentText();
+        validateForm();
+    });
+
+    // If branded content is checked, disable SELF_ONLY option
+    privacySelect.addEventListener('change', function() {
+        if (brandedContent.checked && this.value === 'SELF_ONLY') {
+            alert('Branded content visibility cannot be set to private.');
+            this.value = '';
+        }
+        validateForm();
+    });
+
+    function updateDisclosureNotices() {
+        document.getElementById('yourBrandNotice').style.display = 'none';
+        document.getElementById('brandedContentNotice').style.display = 'none';
+        document.getElementById('bothSelectedNotice').style.display = 'none';
+        commercialRequired.style.display = 'none';
+
+        if (!commercialToggle.checked) return;
+
+        if (yourBrand.checked && brandedContent.checked) {
+            document.getElementById('bothSelectedNotice').style.display = 'block';
+        } else if (yourBrand.checked) {
+            document.getElementById('yourBrandNotice').style.display = 'block';
+        } else if (brandedContent.checked) {
+            document.getElementById('brandedContentNotice').style.display = 'block';
+        }
+    }
+
+    function updateConsentText() {
+        const consentText = document.getElementById('consentText');
+        if (commercialToggle.checked && brandedContent.checked) {
+            consentText.innerHTML = 'By posting, you agree to TikTok\'s ' +
+                '<a href="https://www.tiktok.com/legal/page/global/bc-policy/en" target="_blank">Branded Content Policy</a>' +
+                ' and <a href="https://www.tiktok.com/legal/page/global/music-usage-confirmation/en" target="_blank">Music Usage Confirmation</a>';
+        } else {
+            consentText.innerHTML = 'By posting, you agree to TikTok\'s ' +
+                '<a href="https://www.tiktok.com/legal/page/global/music-usage-confirmation/en" target="_blank">Music Usage Confirmation</a>';
+        }
+    }
+
+    function validateForm() {
+        let valid = true;
+
+        if (!selectedFile) valid = false;
+        if (!privacySelect.value) valid = false;
+        if (!consentCheck.checked) valid = false;
+
+        // If commercial toggle is on, at least one option must be checked
+        if (commercialToggle.checked && !yourBrand.checked && !brandedContent.checked) {
+            commercialRequired.style.display = 'block';
+            valid = false;
+        } else {
+            commercialRequired.style.display = 'none';
+        }
+
+        publishBtn.disabled = !valid;
+    }
+
+    // --- Form Submission ---
+    publishForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        if (!selectedFile) return;
+
+        publishBtn.disabled = true;
+        publishBtn.textContent = 'Uploading...';
+
+        const formData = new FormData(publishForm);
+        formData.set('video', selectedFile);
+
+        const statusArea = document.getElementById('statusArea');
+        const statusIndicator = document.getElementById('statusIndicator');
+        const statusText = document.getElementById('statusText');
+        const statusDetail = document.getElementById('statusDetail');
+
+        statusArea.style.display = 'block';
+        statusIndicator.className = 'status-indicator uploading';
+        statusText.textContent = 'Uploading to TikTok...';
+        statusDetail.textContent = '';
+
+        try {
+            const resp = await fetch('/api/upload', { method: 'POST', body: formData });
+            const data = await resp.json();
+
+            if (data.success) {
+                statusIndicator.className = 'status-indicator processing';
+                statusText.textContent = 'Processing...';
+                statusDetail.textContent = data.message;
+                pollStatus(data.publish_id);
+            } else {
+                statusIndicator.className = 'status-indicator error';
+                statusText.textContent = 'Upload Failed';
+                statusDetail.textContent = data.error;
+                publishBtn.disabled = false;
+                publishBtn.textContent = 'Publish to TikTok';
+            }
+        } catch (err) {
+            statusIndicator.className = 'status-indicator error';
+            statusText.textContent = 'Error';
+            statusDetail.textContent = 'An unexpected error occurred. Please try again.';
+            publishBtn.disabled = false;
+            publishBtn.textContent = 'Publish to TikTok';
+        }
+    });
+
+    // --- Status Polling ---
+    async function pollStatus(publishId) {
+        const statusIndicator = document.getElementById('statusIndicator');
+        const statusText = document.getElementById('statusText');
+        const statusDetail = document.getElementById('statusDetail');
+        let attempts = 0;
+
+        const poll = async () => {
+            if (attempts > 30) {
+                statusText.textContent = 'Status check timed out';
+                statusDetail.textContent = 'Your content may still be processing. Check your TikTok app.';
+                return;
+            }
+            attempts++;
+
+            try {
+                const resp = await fetch('/api/publish-status', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ publish_id: publishId }),
+                });
+                const data = await resp.json();
+                const status = data?.data?.status;
+
+                if (status === 'PUBLISH_COMPLETE') {
+                    statusIndicator.className = 'status-indicator success';
+                    statusText.textContent = 'Published Successfully!';
+                    statusDetail.textContent = 'Your content is now live on TikTok.';
+                    publishBtn.textContent = 'Published ✓';
+                } else if (status === 'FAILED') {
+                    statusIndicator.className = 'status-indicator error';
+                    statusText.textContent = 'Publishing Failed';
+                    statusDetail.textContent = data?.data?.fail_reason || 'Unknown error.';
+                    publishBtn.disabled = false;
+                    publishBtn.textContent = 'Publish to TikTok';
+                } else {
+                    // Still processing — poll again
+                    statusText.textContent = 'Processing... (' + status + ')';
+                    setTimeout(poll, 5000);
+                }
+            } catch (err) {
+                setTimeout(poll, 5000);
+            }
+        };
+
+        setTimeout(poll, 3000);
+    }
+})();
+</script>
+{% endblock %}

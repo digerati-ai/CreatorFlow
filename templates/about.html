@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}About{% endblock %}
+
+{% block content %}
+<section class="about-page">
+    <div class="about-inner">
+        <h1>About CreatorFlow</h1>
+        <p class="about-lead">
+            CreatorFlow is a content publishing platform built for TikTok creators who want
+            a simple, transparent, and compliant way to publish their original video content.
+        </p>
+
+        <div class="about-section">
+            <h2>What We Do</h2>
+            <p>
+                CreatorFlow connects to your TikTok account through TikTok's official authorization
+                system and provides a clean, intuitive interface for publishing your videos. You get
+                full control over your content's privacy settings, interaction preferences, and
+                commercial disclosures — all in one place before you hit publish.
+            </p>
+        </div>
+
+        <div class="about-section">
+            <h2>How It Works</h2>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-num">1</div>
+                    <h3>Connect</h3>
+                    <p>Securely authorize CreatorFlow with your TikTok account through TikTok's official OAuth flow.</p>
+                </div>
+                <div class="step">
+                    <div class="step-num">2</div>
+                    <h3>Upload & Configure</h3>
+                    <p>Upload your video, set your title, choose privacy settings, and configure interaction preferences.</p>
+                </div>
+                <div class="step">
+                    <div class="step-num">3</div>
+                    <h3>Preview & Publish</h3>
+                    <p>Review everything, consent to TikTok's terms, and publish directly or send to your TikTok drafts.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="about-section">
+            <h2>Our Commitment</h2>
+            <p>
+                We are committed to transparency, user control, and platform compliance. CreatorFlow is built
+                on TikTok's official Content Posting API and adheres to TikTok's developer guidelines,
+                content sharing guidelines, and UX requirements. We do not add watermarks to your content,
+                we do not access data beyond what's necessary, and we give you full control over every aspect
+                of your posts.
+            </p>
+        </div>
+
+        <div class="about-section">
+            <h2>Contact Us</h2>
+            <p>
+                Have questions, feedback, or need support? Reach out to us at
+                <a href="mailto:support@creatorflow.app">support@creatorflow.app</a>.
+            </p>
+        </div>
+    </div>
+</section>
+{% endblock %}

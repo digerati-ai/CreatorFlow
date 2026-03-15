@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}Privacy Policy{% endblock %}
+
+{% block content %}
+<section class="legal-page">
+    <div class="legal-inner">
+        <h1>Privacy Policy</h1>
+        <p class="legal-updated">Last updated: March 15, 2026</p>
+
+        <div class="legal-content">
+            <h2>1. Introduction</h2>
+            <p>CreatorFlow ("we," "our," or "us") operates the CreatorFlow web application (the "Service"). This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our Service.</p>
+
+            <h2>2. Information We Collect</h2>
+            <h3>2.1 Information from TikTok</h3>
+            <p>When you connect your TikTok account to CreatorFlow through TikTok's OAuth authorization, we receive and temporarily store:</p>
+            <ul>
+                <li>Your TikTok display name and avatar URL</li>
+                <li>Your TikTok open ID (a unique identifier for your account)</li>
+                <li>OAuth access tokens and refresh tokens necessary to publish content on your behalf</li>
+            </ul>
+            <p>We do not access your TikTok password, private messages, follower lists, or any data beyond what is necessary to provide the publishing service.</p>
+
+            <h3>2.2 Content You Upload</h3>
+            <p>When you upload video content for publishing to TikTok, we temporarily store the video file on our servers solely for the purpose of transferring it to TikTok's servers. Video files are deleted from our servers immediately after the transfer is complete or if the upload fails.</p>
+
+            <h3>2.3 Usage Information</h3>
+            <p>We may collect basic usage information such as pages visited and features used to improve the Service. We do not use tracking cookies for advertising purposes.</p>
+
+            <h2>3. How We Use Your Information</h2>
+            <p>We use the information we collect exclusively to:</p>
+            <ul>
+                <li>Authenticate your TikTok account and maintain your session</li>
+                <li>Publish video content to TikTok on your behalf, as you direct</li>
+                <li>Display your TikTok account information within the Service</li>
+                <li>Check the status of your published content</li>
+                <li>Improve and maintain the Service</li>
+            </ul>
+
+            <h2>4. Data Sharing and Disclosure</h2>
+            <p>We do not sell, trade, rent, or otherwise share your personal information with third parties except:</p>
+            <ul>
+                <li><strong>TikTok:</strong> We transmit your video content and post metadata (title, privacy settings, etc.) to TikTok through their official Content Posting API to fulfill your publishing requests.</li>
+                <li><strong>Legal Requirements:</strong> We may disclose information if required by law, regulation, or legal process.</li>
+            </ul>
+
+            <h2>5. Data Security</h2>
+            <p>We implement appropriate technical and organizational measures to protect your information, including encrypted connections (HTTPS), secure token storage, and immediate deletion of temporary video files. However, no method of electronic transmission or storage is 100% secure.</p>
+
+            <h2>6. Data Retention</h2>
+            <ul>
+                <li><strong>Session data</strong> (tokens, display name): Stored for the duration of your browser session and deleted when you disconnect your account or your session expires.</li>
+                <li><strong>Video files:</strong> Temporarily stored only during the upload process and deleted immediately after transfer to TikTok.</li>
+                <li>We do not maintain long-term databases of user content or personal information.</li>
+            </ul>
+
+            <h2>7. Your Rights</h2>
+            <p>You may at any time:</p>
+            <ul>
+                <li>Disconnect your TikTok account from CreatorFlow, which removes all stored tokens and account information</li>
+                <li>Revoke CreatorFlow's access through your TikTok account settings</li>
+                <li>Request deletion of any data we may hold by contacting us</li>
+            </ul>
+
+            <h2>8. Third-Party Services</h2>
+            <p>CreatorFlow integrates with TikTok's platform through their official developer APIs. Your use of TikTok is governed by TikTok's own <a href="https://www.tiktok.com/legal/page/us/privacy-policy/en" target="_blank">Privacy Policy</a> and <a href="https://www.tiktok.com/legal/page/us/terms-of-service/en" target="_blank">Terms of Service</a>.</p>
+
+            <h2>9. Children's Privacy</h2>
+            <p>CreatorFlow is not intended for individuals under the age of 18. We do not knowingly collect personal information from children.</p>
+
+            <h2>10. Changes to This Policy</h2>
+            <p>We may update this Privacy Policy from time to time. We will notify users of significant changes by posting the updated policy on this page with a revised "Last updated" date.</p>
+
+            <h2>11. Contact Us</h2>
+            <p>If you have questions about this Privacy Policy or our data practices, please contact us at:</p>
+            <p><a href="mailto:privacy@creatorflow.app">privacy@creatorflow.app</a></p>
+        </div>
+    </div>
+</section>
+{% endblock %}
