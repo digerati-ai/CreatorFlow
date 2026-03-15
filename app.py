@@ -379,13 +379,27 @@ def api_upload():
             data=video_bytes,
         )
 
+        logger.info("Video PUT status: %s", upload_resp.status_code)
+        logger.info("Video PUT response: %s", upload_resp.text[:500] if upload_resp.text else "(empty)")
+
         if upload_resp.status_code not in (200, 201):
-            return jsonify({"error": "Video upload to TikTok failed."}), 400
+            return jsonify({"error": f"Video upload to TikTok failed. Status: {upload_resp.status_code}"}), 400
+
+        # Check publish status immediately
+        try:
+            status_resp = requests.post(
+                TIKTOK_PUBLISH_STATUS_URL,
+                headers=tiktok_headers(access_token),
+                json={"publish_id": publish_id},
+            )
+            logger.info("Initial publish status: %s", status_resp.text[:500])
+        except Exception as se:
+            logger.warning("Status check failed: %s", se)
 
         return jsonify({
             "success": True,
             "publish_id": publish_id,
-            "message": "Video uploaded successfully! It may take a few minutes to process.",
+            "message": "Video uploaded successfully! Check your TikTok inbox for a notification to finalize your post.",
         })
 
     except Exception as e:
