@@ -350,14 +350,26 @@ def api_upload():
     try:
         description = request.form.get("description", "").strip()
 
-        # Source info — chunk large files (TikTok max chunk ~10MB)
-        MAX_CHUNK_SIZE = 10 * 1024 * 1024  # 10 MB
-        if file_size <= MAX_CHUNK_SIZE:
+        # Source info — chunk large files per TikTok media transfer guide:
+        #   - Chunks must be 5–64 MB, final chunk can exceed chunk_size (up to 128 MB)
+        #   - total_chunk_count = floor(video_size / chunk_size)
+        #   - Files under 5 MB: single chunk, chunk_size = video_size
+        MIN_CHUNK = 5 * 1024 * 1024    # 5 MB
+        MAX_CHUNK = 64 * 1024 * 1024   # 64 MB
+        DEFAULT_CHUNK = 10 * 1024 * 1024  # 10 MB
+
+        if file_size <= MIN_CHUNK:
+            # Small file: upload as single chunk
+            chunk_size = file_size
+            total_chunks = 1
+        elif file_size <= MAX_CHUNK:
+            # Medium file: fits in one chunk
             chunk_size = file_size
             total_chunks = 1
         else:
-            chunk_size = MAX_CHUNK_SIZE
-            total_chunks = (file_size + chunk_size - 1) // chunk_size  # ceil division
+            # Large file: use 10MB chunks, floor division per TikTok docs
+            chunk_size = DEFAULT_CHUNK
+            total_chunks = file_size // chunk_size  # FLOOR division, last chunk absorbs remainder
 
         source_info = {
             "source": "FILE_UPLOAD",
@@ -418,16 +430,22 @@ def api_upload():
         publish_id = init_data["data"]["publish_id"]
 
         # Upload the video file in chunks
+        # Last chunk absorbs all remaining bytes (can exceed chunk_size, up to 128 MB)
         with open(filepath, "rb") as f:
-            offset = 0
-            chunk_num = 0
-            while offset < file_size:
-                chunk_data = f.read(chunk_size)
+            for chunk_num in range(total_chunks):
+                is_last = (chunk_num == total_chunks - 1)
+                if is_last:
+                    # Last chunk: read everything remaining
+                    chunk_data = f.read()
+                else:
+                    chunk_data = f.read(chunk_size)
+
                 bytes_read = len(chunk_data)
+                offset = chunk_num * chunk_size
                 end_byte = offset + bytes_read - 1
 
-                logger.info("Uploading chunk %d/%d: bytes %d-%d/%d",
-                            chunk_num + 1, total_chunks, offset, end_byte, file_size)
+                logger.info("Uploading chunk %d/%d: bytes %d-%d/%d (%d bytes)",
+                            chunk_num + 1, total_chunks, offset, end_byte, file_size, bytes_read)
 
                 upload_resp = requests.put(
                     upload_url,
@@ -444,9 +462,6 @@ def api_upload():
 
                 if upload_resp.status_code not in (200, 201):
                     return jsonify({"error": f"Video upload failed on chunk {chunk_num + 1}. Status: {upload_resp.status_code}"}), 400
-
-                offset += bytes_read
-                chunk_num += 1
 
         # Check publish status immediately
         try:
