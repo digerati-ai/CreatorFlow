@@ -154,6 +154,13 @@ def auth_tiktok():
 @app.route("/auth/tiktok/callback")
 def auth_tiktok_callback():
     """Handle the OAuth callback from TikTok."""
+    logger.info("CALLBACK HIT: session keys: %s, referrer: %s", list(session.keys()), request.referrer)
+
+    # If already connected, skip — prevents browser replaying this URL
+    if get_connected_account():
+        logger.info("CALLBACK: already connected, skipping token exchange")
+        return redirect(url_for("dashboard"))
+
     error = request.args.get("error")
     if error:
         flash(f"TikTok authorization failed: {request.args.get('error_description', error)}", "error")
@@ -166,9 +173,10 @@ def auth_tiktok_callback():
         flash("No authorization code received from TikTok.", "error")
         return redirect(url_for("index"))
 
-    # Verify CSRF state
-    if state != session.pop("oauth_state", None):
-        flash("Invalid state parameter. Please try again.", "error")
+    # Verify CSRF state — if missing, this is likely a replayed request
+    stored_state = session.pop("oauth_state", None)
+    if state != stored_state:
+        logger.info("CALLBACK: state mismatch (stored=%s, got=%s) — likely browser replay", stored_state, state)
         return redirect(url_for("index"))
 
     # Exchange code for access token
@@ -238,13 +246,20 @@ def debug_session():
 # ---------------------------------------------------------------------------
 # Authenticated app pages
 # ---------------------------------------------------------------------------
+@app.before_request
+def log_every_request():
+    """Log every request with session state for debugging."""
+    logger.info("REQUEST: %s %s | session_keys=%s | has_account=%s",
+                request.method, request.path, list(session.keys()),
+                "tiktok_account" in session)
+
+
 @app.after_request
 def add_no_cache(response):
     """Prevent browser from caching authenticated pages."""
-    if request.endpoint in ("dashboard", "publish", "index"):
-        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
-        response.headers["Pragma"] = "no-cache"
-        response.headers["Expires"] = "0"
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
     return response
 
 
