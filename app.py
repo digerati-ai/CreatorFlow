@@ -350,12 +350,20 @@ def api_upload():
     try:
         description = request.form.get("description", "").strip()
 
-        # Source info is common to both modes
+        # Source info — chunk large files (TikTok max chunk ~10MB)
+        MAX_CHUNK_SIZE = 10 * 1024 * 1024  # 10 MB
+        if file_size <= MAX_CHUNK_SIZE:
+            chunk_size = file_size
+            total_chunks = 1
+        else:
+            chunk_size = MAX_CHUNK_SIZE
+            total_chunks = (file_size + chunk_size - 1) // chunk_size  # ceil division
+
         source_info = {
             "source": "FILE_UPLOAD",
             "video_size": file_size,
-            "chunk_size": file_size,
-            "total_chunk_count": 1,
+            "chunk_size": chunk_size,
+            "total_chunk_count": total_chunks,
         }
 
         if post_mode == "DIRECT_POST":
@@ -409,24 +417,36 @@ def api_upload():
         upload_url = init_data["data"]["upload_url"]
         publish_id = init_data["data"]["publish_id"]
 
-        # Upload the video file
+        # Upload the video file in chunks
         with open(filepath, "rb") as f:
-            video_bytes = f.read()
+            offset = 0
+            chunk_num = 0
+            while offset < file_size:
+                chunk_data = f.read(chunk_size)
+                bytes_read = len(chunk_data)
+                end_byte = offset + bytes_read - 1
 
-        upload_resp = requests.put(
-            upload_url,
-            headers={
-                "Content-Range": f"bytes 0-{file_size - 1}/{file_size}",
-                "Content-Type": "video/mp4",
-            },
-            data=video_bytes,
-        )
+                logger.info("Uploading chunk %d/%d: bytes %d-%d/%d",
+                            chunk_num + 1, total_chunks, offset, end_byte, file_size)
 
-        logger.info("Video PUT status: %s", upload_resp.status_code)
-        logger.info("Video PUT response: %s", upload_resp.text[:500] if upload_resp.text else "(empty)")
+                upload_resp = requests.put(
+                    upload_url,
+                    headers={
+                        "Content-Range": f"bytes {offset}-{end_byte}/{file_size}",
+                        "Content-Type": "video/mp4",
+                    },
+                    data=chunk_data,
+                )
 
-        if upload_resp.status_code not in (200, 201):
-            return jsonify({"error": f"Video upload to TikTok failed. Status: {upload_resp.status_code}"}), 400
+                logger.info("Chunk %d PUT status: %s", chunk_num + 1, upload_resp.status_code)
+                logger.info("Chunk %d PUT response: %s", chunk_num + 1,
+                            upload_resp.text[:500] if upload_resp.text else "(empty)")
+
+                if upload_resp.status_code not in (200, 201):
+                    return jsonify({"error": f"Video upload failed on chunk {chunk_num + 1}. Status: {upload_resp.status_code}"}), 400
+
+                offset += bytes_read
+                chunk_num += 1
 
         # Check publish status immediately
         try:
