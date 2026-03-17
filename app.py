@@ -13,7 +13,7 @@ from datetime import datetime, timedelta
 from urllib.parse import urlencode
 from flask import (
     Flask, render_template, redirect, url_for, request,
-    session, flash, jsonify, abort, send_from_directory
+    session, flash, jsonify, abort, send_from_directory, make_response
 )
 from werkzeug.utils import secure_filename
 
@@ -108,7 +108,9 @@ def ensure_valid_token() -> str | None:
 # ---------------------------------------------------------------------------
 @app.route("/")
 def index():
-    return render_template("index.html", account=get_connected_account())
+    account = get_connected_account()
+    logger.info("INDEX: session keys: %s, has account: %s", list(session.keys()), account is not None)
+    return render_template("index.html", account=account)
 
 
 @app.route("/privacy")
@@ -212,10 +214,16 @@ def auth_tiktok_callback():
 @app.route("/auth/disconnect")
 def auth_disconnect():
     """Remove TikTok account from session."""
+    had_account = "tiktok_account" in session
+    logger.info("DISCONNECT: session keys before clear: %s", list(session.keys()))
     session.clear()
-    flash("TikTok account disconnected.", "info")
-    resp = redirect(url_for("index"))
+    logger.info("DISCONNECT: session keys after clear: %s", list(session.keys()))
+    logger.info("DISCONNECT: had_account=%s", had_account)
+    resp = make_response(redirect(url_for("index")))
+    # Nuke the session cookie entirely
+    resp.delete_cookie(app.config.get("SESSION_COOKIE_NAME", "session"))
     resp.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    resp.headers["Pragma"] = "no-cache"
     return resp
 
 
