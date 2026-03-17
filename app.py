@@ -134,9 +134,9 @@ def tiktok_verification():
 # ---------------------------------------------------------------------------
 # TikTok OAuth flow
 # ---------------------------------------------------------------------------
-@app.route("/auth/tiktok")
+@app.route("/auth/tiktok", methods=["POST"])
 def auth_tiktok():
-    """Redirect user to TikTok's authorization page."""
+    """Redirect user to TikTok's authorization page. POST-only to prevent browser prefetch."""
     csrf_state = secrets.token_urlsafe(32)
     session["oauth_state"] = csrf_state
 

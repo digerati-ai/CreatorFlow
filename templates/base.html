@@ -23,7 +23,9 @@
                     <a href="{{ url_for('publish') }}">Publish</a>
                     <a href="{{ url_for('auth_disconnect') }}" class="btn btn-sm btn-outline">Disconnect</a>
                 {% else %}
-                    <a href="{{ url_for('auth_tiktok') }}" class="btn btn-sm btn-primary">Connect TikTok</a>
+                    <form action="{{ url_for('auth_tiktok') }}" method="POST" style="display:inline;margin:0;">
+                        <button type="submit" class="btn btn-sm btn-primary">Connect TikTok</button>
+                    </form>
                 {% endif %}
             </div>
         </div>

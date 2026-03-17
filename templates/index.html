@@ -13,7 +13,9 @@
         {% if account %}
             <a href="{{ url_for('dashboard') }}" class="btn btn-primary btn-lg">Go to Dashboard →</a>
         {% else %}
-            <a href="{{ url_for('auth_tiktok') }}" class="btn btn-primary btn-lg">Connect Your TikTok Account</a>
+            <form action="{{ url_for('auth_tiktok') }}" method="POST" style="display:inline;">
+                <button type="submit" class="btn btn-primary btn-lg">Connect Your TikTok Account</button>
+            </form>
         {% endif %}
     </div>
 </section>
@@ -65,7 +67,9 @@
         {% if account %}
             <a href="{{ url_for('publish') }}" class="btn btn-primary btn-lg">Publish Now →</a>
         {% else %}
-            <a href="{{ url_for('auth_tiktok') }}" class="btn btn-primary btn-lg">Get Started — Free</a>
+            <form action="{{ url_for('auth_tiktok') }}" method="POST" style="display:inline;">
+                <button type="submit" class="btn btn-primary btn-lg">Get Started — Free</button>
+            </form>
         {% endif %}
     </div>
 </section>
