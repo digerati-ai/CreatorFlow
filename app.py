@@ -222,6 +222,16 @@ def auth_disconnect():
 # ---------------------------------------------------------------------------
 # Authenticated app pages
 # ---------------------------------------------------------------------------
+@app.after_request
+def add_no_cache(response):
+    """Prevent browser from caching authenticated pages."""
+    if request.endpoint in ("dashboard", "publish", "index"):
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
+    return response
+
+
 @app.route("/dashboard")
 def dashboard():
     account = get_connected_account()
