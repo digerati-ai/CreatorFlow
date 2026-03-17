@@ -212,9 +212,11 @@ def auth_tiktok_callback():
 @app.route("/auth/disconnect")
 def auth_disconnect():
     """Remove TikTok account from session."""
-    session.pop("tiktok_account", None)
+    session.clear()
     flash("TikTok account disconnected.", "info")
-    return redirect(url_for("index"))
+    resp = redirect(url_for("index"))
+    resp.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    return resp
 
 
 # ---------------------------------------------------------------------------
